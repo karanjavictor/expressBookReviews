@@ -54,9 +54,29 @@ regd_users.post("/login", (req,res) => {
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const username = req.session.authorization.username;
+  const review = req.body.review
+  const isbn = req.params.isbn
+  function updateBooksObject(isbn,username,review) {
+      let book = books[isbn]
+      if(book.reviews.hasOwnProperty(username)){
+        book.reviews[username]= review
+    }
+  }
+  updateBooksObject(isbn,username,review)
+  return res.status(200).json({message: "Review successfully posted"});
 });
 
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    const username = req.session.authorization.username;
+// Filter out reviews created by the logged in user
+    let filteredReviews = books[isbn].reviews.filter((review) => review.username !== username);
+  // Update the books object with the filtered reviews
+    books[isbn].reviews = filteredReviews;
+  
+    return res.status(200).json({message: "Review successfully deleted"});
+  
+});
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
 module.exports.users = users;
