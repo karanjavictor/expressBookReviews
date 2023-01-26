@@ -68,12 +68,10 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
 });
 
 regd_users.delete("/auth/review/:isbn", (req, res) => {
-    const username = req.session.authorization.username;
-// Filter out reviews created by the logged in user
-    let filteredReviews = books[isbn].reviews.filter((review) => review.username !== username);
-  // Update the books object with the filtered reviews
-    books[isbn].reviews = filteredReviews;
-  
+    const username = req.session.authorization.username
+    const isbn = req.params.isbn
+    const updatedReviews = Object.values(books).filter(review => review.username === username)[0]; // Filter reviews 
+    books[isbn].reviews = updatedReviews; // Update reviews
     return res.status(200).json({message: "Review successfully deleted"});
   
 });
