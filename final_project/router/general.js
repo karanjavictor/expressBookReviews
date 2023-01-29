@@ -24,81 +24,136 @@ public_users.post("/register", (req,res) => {
   return res.status(404).json({message: "Unable to register user!"});
 });
 // Get the book list available in the shop
-public_users.get('/',async function (req, res) {
+public_users.get('/',function (req, res) {
   //Write your code here
-  try {
-    const response = await axios({books: books}, {responseType: 'json'});
-    const allBooks = response.data;
-    res.json(allBooks);
-    return res.status(200).json({message: "Successfully retrieved books data"});
-  } catch (err) {
-      return res.status(400).json({message: err})
-  }
+  res.send(JSON.stringify(books,null,4));
 }); 
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn', async function (req, res) {
   //Write your code here
   const isbn = req.params.isbn
-  try{
-    const response = await axios({books: books[isbn] });
-    return res.status(200).json({book: response.data}); 
-    } catch(err) { 
-    return res.status(400).json({message: err});
-  }
+  res.send(books[isbn])
  });
   
 // Get book details based on author
-public_users.get('/author/:author', async function (req, res) {
+public_users.get('/author/:author',function (req, res) {
   //Write your code here
-  const bookKeys = Object.keys(books)
-  const author = req.params.author
-  try {
-    for(let i = 0; i < bookKeys.length; i++) {
-        if(books[bookKeys[i]].author === author){
-            const response = await axios({
-                author: books[ bookKeys[i]].author,
-                title: books[bookKeys[i]].title,
-                reviews: books[bookKeys[i]].reviews
-            }); 
-            return res.status(200).json({book: response.data});
-        }
+let bookList = []
+  for(const [key, values] of Object.entries(books)) {
+    const book = Object.entries(values);
+    for(let i = 0; i < book.length; i++){
+      if(book[i][0] === 'author' && book[i][1] === req.params.author){
+        bookList.push(books[key]);
+      }
     }
-  } catch(err) { 
-    return res.status(400).json({message: err});
   }
+  if(bookList.length === 0){
+    return res.status(300).json({message : "Author not Found!"})
+  }
+  res.send(bookList)
 });
 
 // Get all books based on title
-public_users.get('/title/:title', async function (req, res) {
+
+public_users.get('/title/:title',function (req, res) {
   //Write your code here
-  const bookKeys = Object.keys(books)
-  const title = req.params.title
-  try{
-  for(let i = 0; i < bookKeys.length; i++) {
-      if(books[bookKeys[i]].title === title){
-          const response = await axios({
-            author: books[bookKeys[i]].author,
-            title: books[bookKeys[i]].title,
-            reviews: books[bookKeys[i]].reviews})
-          return res.status(200).json({book: response.data})
+  let bookList = []
+  for(const [key, values] of Object.entries(books)) {
+    const book = Object.entries(values);
+    for(let i = 0; i < book.length; i++){
+      if(book[i][0] === 'title' && book[i][1] === req.params.title){
+        bookList.push(books[key]);
       }
     }
-    } catch(err) {
-        return res.status(200).json({message : err})
-    }
+  }
+  if(bookList.length === 0){
+    return res.status(300).json({message : "title not Found!"})
+  }
+  res.send(bookList)
 });
 
 //  Get book review
 public_users.get('/review/:isbn', async function (req, res) {
   //Write your code here
   const isbn = req.params.isbn
-  try {
-      const response = await axios({reviews : books[isbn].reviews})
-      return res.status(200).json({book:response.data})
-  } catch(err) {
-      res.status(400).json({message : err})
-  }
+  res.send(books[isbn].reviews)
 });
+//code for getting the list of books in the shop using promise callbacks
+
+function gettingBooks(){
+  return new Promise((resolve,reject)=> {
+    resolve(books)
+  })
+}
+public_users.get('/',function (req,res){
+  gettingBooks.then(
+    (theBooks)=> res.send(JSON.stringify(theBooks,null,4)),
+    (error) => res.send(error)
+  )
+});
+// code for getting book details based on isbn using promise callbacks
+function getISBN(isbn) {
+  let book_ = books[isbn];
+  return new Promise((resolve,reject)=> {
+    if(book_){
+      resolve(book_)
+    }else {
+      reject("Unable to find book!")
+    }
+  })
+}
+
+public_users.get('/isbn/:isbn',function(req,res){
+  const isbn = req.params.isbn;
+  getISBN(isbn).then(
+    (theBooks)=> res.send(JSON.stringify(theBooks, null, 4)),
+    (error) => res.send(error)
+  )
+})
+//Adding promise Callback to the code
+function getbyAuthor(author) {
+  let output = [];
+  return new Promise((resolve,reject)=> {
+    for(var isbn in books){
+      let book_ = books[isbn]
+      if(book_.author === author){
+        output.push(book_);
+      }
+    }
+    resolve(output)
+  })
+}
+//get book details based on author
+public_users.get('/author/:author',function (req,res){
+  const author = req.params.author;
+  getbyAuthor(author)
+  .then(
+    result => res.send(JSON.stringify(result, null, 4))
+  );
+});
+function getbyTitle(title) {
+  let output = [];
+  return new Promise((resolve,reject) => {
+    for(var isbn in books){
+      let book_= books[isbn]
+      if (book_.title === title){
+        output.push(book_)
+      }
+    }
+    resolve(output)
+  })
+}
+//get book details based on title
+public_users.get('/title/:title', function (req,res){
+  const title = req.params.title;
+  getbyTitle(title)
+  .then(
+    result => res.send(JSON.stringify(result, null, 4))
+  );
+});
+
+
+
 
 module.exports.general = public_users;
