@@ -1,4 +1,3 @@
-const { json } = require('express');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 let books = require("./booksdb.js");
@@ -33,9 +32,9 @@ if(validUsers.length > 0){
 //only registered users can login
 regd_users.post("/login", (req,res) => {
   //Write your code here
-  console.log("login: ", req.body);
   const username = req.body.username;
   const password = req.body.password;
+  
   if (!username || !password) {
       return res.status(404).json({message: "Error logging in"});
   }
@@ -58,15 +57,14 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   const username = req.session.authorization.username;
   const review = req.body.review
   const isbn = req.params.isbn
-  console.log("add review: ", req.params, req.body, req.session);
   function updateBooksObject(isbn,username,review) {
       let book = books[isbn]
       if(book.reviews.hasOwnProperty(username)){
         book.reviews[username]= review
-    } 
+    }
   }
   updateBooksObject(isbn,username,review)
-  return res.status(200).json({message: `${username} added a Review`});
+  return res.status(200).json({message: "Review successfully posted"});
 });
 
 regd_users.delete("/auth/review/:isbn", (req, res) => {
